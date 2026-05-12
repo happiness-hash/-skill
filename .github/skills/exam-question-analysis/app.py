@@ -1,22 +1,30 @@
 import os
 
-from flask import Flask, render_template_string, request
+from flask import Flask, jsonify, render_template_string, request
 
-from exam_analysis.web import HTML_TEMPLATE, build_web_context, run_web_analysis
+from exam_analysis.web import HTML_TEMPLATE, build_web_context, get_task, start_web_analysis
 
 app = Flask(__name__)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
-    result = None
-    if request.method == 'POST':
-        try:
-            result = run_web_analysis(request.form, os.path.dirname(__file__))
-        except Exception as exc:
-            result = str(exc)
-    context = build_web_context(result=result)
+    context = build_web_context()
     return render_template_string(HTML_TEMPLATE, **context)
+
+
+@app.route('/start', methods=['POST'])
+def start():
+    try:
+        task_id = start_web_analysis(request.form)
+    except Exception as exc:
+        return jsonify({'detail': '启动失败', 'result': str(exc)}), 400
+    return jsonify({'task_id': task_id})
+
+
+@app.route('/status/<task_id>', methods=['GET'])
+def status(task_id):
+    return jsonify(get_task(task_id))
 
 
 if __name__ == '__main__':

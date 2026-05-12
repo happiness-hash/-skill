@@ -15,6 +15,25 @@ def save_node_file(path, title, raw_text, summary, child_paths):
                 file_obj.write(f'- {child}\n')
 
 
+def save_page_text(output_dir, page_number, filename, page_text):
+    pages_dir = os.path.join(output_dir, 'pages')
+    os.makedirs(pages_dir, exist_ok=True)
+    path = os.path.join(pages_dir, f'page_{page_number:03d}.txt')
+    with open(path, 'w', encoding='utf-8') as file_obj:
+        file_obj.write(f'=== Page {page_number}: {filename} ===\n')
+        file_obj.write(page_text.strip() + '\n')
+    return path
+
+
+def save_block_file(output_dir, block_number, block_text):
+    blocks_dir = os.path.join(output_dir, 'blocks')
+    os.makedirs(blocks_dir, exist_ok=True)
+    path = os.path.join(blocks_dir, f'block_{block_number:03d}.txt')
+    with open(path, 'w', encoding='utf-8') as file_obj:
+        file_obj.write(block_text.strip() + '\n')
+    return path
+
+
 def create_table_of_contents(output_dir, node_files):
     toc_path = os.path.join(output_dir, 'table_of_contents.md')
     with open(toc_path, 'w', encoding='utf-8') as file_obj:

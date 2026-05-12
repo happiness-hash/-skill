@@ -43,7 +43,7 @@ def multimodal_extract_text_from_image(image_path, model=DEFAULT_OPENAI_MODEL, o
     return local_extract_text_from_image(image_path)
 
 
-def extract_text_from_images(folder_path, use_multimodal=False, multimodal_model=DEFAULT_OPENAI_MODEL, openai_config=None):
+def iter_image_texts(folder_path, use_multimodal=False, multimodal_model=DEFAULT_OPENAI_MODEL, openai_config=None, progress=None):
     image_files = sorted(
         file_name for file_name in os.listdir(folder_path)
         if file_name.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS)
@@ -51,9 +51,15 @@ def extract_text_from_images(folder_path, use_multimodal=False, multimodal_model
     if not image_files:
         raise ValueError('输入文件夹中没有找到支持的图片文件（.png, .jpg, .jpeg）。')
 
-    texts = []
+    total_images = len(image_files)
     for index, filename in enumerate(image_files, start=1):
         image_path = os.path.join(folder_path, filename)
+        if progress:
+            progress.emit(
+                ((index - 1) / total_images) * 100,
+                'ocr',
+                f'正在识别第 {index}/{total_images} 张图片：{filename}',
+            )
         if use_multimodal:
             page_text = multimodal_extract_text_from_image(
                 image_path,
@@ -62,5 +68,28 @@ def extract_text_from_images(folder_path, use_multimodal=False, multimodal_model
             )
         else:
             page_text = local_extract_text_from_image(image_path)
-        texts.append(f"=== Page {index}: {filename} ===\n{page_text.strip()}")
+        if progress:
+            progress.emit(
+                (index / total_images) * 100,
+                'ocr',
+                f'已完成第 {index}/{total_images} 张图片：{filename}',
+            )
+        yield {
+            'index': index,
+            'filename': filename,
+            'text': page_text.strip(),
+            'total': total_images,
+        }
+
+
+def extract_text_from_images(folder_path, use_multimodal=False, multimodal_model=DEFAULT_OPENAI_MODEL, openai_config=None, progress=None):
+    texts = []
+    for item in iter_image_texts(
+        folder_path,
+        use_multimodal=use_multimodal,
+        multimodal_model=multimodal_model,
+        openai_config=openai_config,
+        progress=progress,
+    ):
+        texts.append(f"=== Page {item['index']}: {item['filename']} ===\n{item['text']}")
     return '\n\n'.join(texts)

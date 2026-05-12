@@ -16,10 +16,12 @@ def extract_original_questions(text):
     return list(dict.fromkeys(questions))
 
 
-def generate_original_question_answers(original_questions, source_text, answers_dir, use_ai=True, openai_config=None):
+def generate_original_question_answers(original_questions, source_text, answers_dir, use_ai=True, openai_config=None, progress=None):
     original_answers_dir = os.path.join(answers_dir, 'original_questions')
     os.makedirs(original_answers_dir, exist_ok=True)
     if not original_questions:
+        if progress:
+            progress.emit(100, 'original_answers', '未识别到原题，跳过原题答案生成')
         return [], []
 
     answers = []
@@ -46,19 +48,28 @@ def generate_original_question_answers(original_questions, source_text, answers_
             answers.append(f'答案{index}: 可根据原文内容围绕“{question[:24]}”整理核心考点、定义、原理与案例分析要点。')
 
     answer_files = []
+    total_answers = len(answers)
     for index, answer in enumerate(answers, 1):
         answer_path = os.path.join(original_answers_dir, f'original_answer_{index}.txt')
         with open(answer_path, 'w', encoding='utf-8') as file_obj:
             file_obj.write(answer + '\n')
         answer_files.append(answer_path)
+        if progress:
+            progress.emit(
+                (index / total_answers) * 100,
+                'original_answers',
+                f'已写入原题答案 {index}/{total_answers}',
+            )
 
     return answers, answer_files
 
 
-def generate_questions_and_answers(summary, num_questions, answers_dir, use_ai=True, openai_config=None):
+def generate_questions_and_answers(summary, num_questions, answers_dir, use_ai=True, openai_config=None, progress=None):
     os.makedirs(answers_dir, exist_ok=True)
     questions = []
     answers = []
+    if progress:
+        progress.emit(10, 'mock_questions', '正在生成模拟题与答案')
     if use_ai and get_openai_client(openai_config):
         prompt = (
             f'请根据以下总结，生成{num_questions}道模拟考试题目，并为每道题目给出简要答案。'
@@ -78,6 +89,8 @@ def generate_questions_and_answers(summary, num_questions, answers_dir, use_ai=T
                     questions.append(line)
                 elif line.lower().startswith('答案') or line.lower().startswith('answer'):
                     answers.append(line)
+        if progress:
+            progress.emit(70, 'mock_questions', '模拟题文本已生成，正在写入答案文件')
 
     if not questions:
         keywords = [word for word in re.findall(r'\w+', summary) if len(word) > 4]
@@ -86,12 +99,21 @@ def generate_questions_and_answers(summary, num_questions, answers_dir, use_ai=T
             topic = unique_keywords[index] if index < len(unique_keywords) else f'关键点{index+1}'
             questions.append(f'{index+1}. 请说明“{topic}”在试题中的作用。')
             answers.append(f'答案{index+1}: 这里可以归纳“{topic}”的核心考点和解题思路。')
+        if progress:
+            progress.emit(70, 'mock_questions', '已按本地规则生成模拟题，正在写入答案文件')
 
     answer_files = []
+    total_answers = len(answers)
     for index, answer in enumerate(answers, 1):
         answer_path = os.path.join(answers_dir, f'answer_{index}.txt')
         with open(answer_path, 'w', encoding='utf-8') as file_obj:
             file_obj.write(answer + '\n')
         answer_files.append(answer_path)
+        if progress and total_answers:
+            progress.emit(
+                70 + (index / total_answers) * 30,
+                'mock_questions',
+                f'已写入模拟题答案 {index}/{total_answers}',
+            )
 
     return questions, answers, answer_files

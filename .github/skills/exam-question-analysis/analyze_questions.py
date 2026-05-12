@@ -6,6 +6,12 @@ from exam_analysis.config import DEFAULT_OPENAI_MODEL, build_openai_config
 from exam_analysis.pipeline import run_analysis
 
 
+def render_progress_bar(progress, width=28):
+    progress = max(0, min(100, int(progress)))
+    filled = int(width * progress / 100)
+    return '[' + ('#' * filled) + ('-' * (width - filled)) + f'] {progress:>3}%'
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description='对上传的试卷图片进行OCR分块分析，生成节点文件、全文总结、模拟题和答案')
     parser.add_argument('folder', help='包含试卷图片的文件夹路径')
@@ -50,7 +56,18 @@ def main():
     if use_multimodal_ocr:
         print(f"视觉模型: {openai_config['vision_model']}")
 
-    print('正在提取文本...')
+    last_progress = {'value': -1, 'detail': ''}
+
+    def on_progress(event):
+        progress_value = event['progress']
+        detail = event.get('detail', '')
+        if progress_value == last_progress['value'] and detail == last_progress['detail']:
+            return
+        last_progress['value'] = progress_value
+        last_progress['detail'] = detail
+        line = f"\r{render_progress_bar(progress_value)} {detail}"
+        print(line[:180].ljust(180), end='', flush=True)
+
     try:
         result = run_analysis(
             folder_path=folder_path,
@@ -60,16 +77,15 @@ def main():
             use_ai=use_ai,
             use_multimodal_ocr=use_multimodal_ocr,
             openai_config=openai_config,
+            progress_callback=on_progress,
         )
     except ValueError as exc:
+        print()
         print(f'错误：{exc}')
         sys.exit(1)
+    print()
 
-    print('正在分块...')
     print(f"共生成 {len(result['blocks'])} 个块，线段树高度约为 {result['tree_height']} 层")
-    print('正在构建线段树并生成节点摘要...')
-    print('正在创建目录和全文总结...')
-    print('正在生成模拟考试题和答案...')
     print('\n处理完成！')
     print(f"输出目录: {args.output_dir}")
     print(f"- 叶子与节点摘要文件: {len(result['node_files'])} 个，保存于 {result['summaries_dir']}")

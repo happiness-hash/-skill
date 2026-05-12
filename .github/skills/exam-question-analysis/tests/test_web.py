@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from exam_analysis.output_writer import save_answer_overview
-from exam_analysis.web import build_analysis_command
+from exam_analysis.web import build_analysis_command, build_task_payload, create_task_state
 
 
 class WebTests(unittest.TestCase):
@@ -20,6 +21,7 @@ class WebTests(unittest.TestCase):
         )
         self.assertNotIn('--api-key', command)
         self.assertNotIn('--base-url', command)
+        self.assertEqual(command[0], 'analyze_questions.py')
         self.assertEqual(command[-2:], ['--output-dir', 'output'])
 
     def test_build_analysis_command_includes_selected_flags(self):
@@ -36,6 +38,27 @@ class WebTests(unittest.TestCase):
         self.assertIn('--api-key', command)
         self.assertIn('--use-multimodal-ocr', command)
         self.assertIn('--no-openai', command)
+
+    def test_build_task_payload_reads_checkboxes(self):
+        payload = build_task_payload(
+            {
+                'folder': 'input',
+                'output_dir': 'output',
+                'api_key': '',
+                'base_url': '',
+                'model': '',
+                'vision_model': '',
+                'use_multimodal_ocr': '1',
+                'no_openai': '1',
+            }
+        )
+        self.assertTrue(payload['use_multimodal_ocr'])
+        self.assertTrue(payload['no_openai'])
+
+    def test_create_task_state_defaults_to_queued(self):
+        task = create_task_state()
+        self.assertEqual(task['status'], 'queued')
+        self.assertEqual(task['progress'], 0)
 
     def test_save_answer_overview_writes_markdown(self):
         with TemporaryDirectory() as temp_dir:
