@@ -77,8 +77,10 @@ def main():
     print(f"- 全文总结: {result['full_summary_path']}")
     print(f"- 模拟试题: {result['questions_path']}")
     print(f"- 答案文件: {len(result['answer_files'])} 个，保存于 {result['answers_dir']}")
+    print(f"- 模拟题答案总览: {result['mock_answer_overview_path']}")
     print(f"- 原题整理: {result['original_questions_path']}")
     print(f"- 原题答案文件: {len(result['original_answer_files'])} 个，保存于 {os.path.join(result['answers_dir'], 'original_questions')}")
+    print(f"- 原题答案总览: {result['original_answer_overview_path']}")
 
 
 if __name__ == '__main__':

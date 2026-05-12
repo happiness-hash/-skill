@@ -94,4 +94,4 @@ def generate_questions_and_answers(summary, num_questions, answers_dir, use_ai=T
             file_obj.write(answer + '\n')
         answer_files.append(answer_path)
 
-    return questions, answer_files
+    return questions, answers, answer_files

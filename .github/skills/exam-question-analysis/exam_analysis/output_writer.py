@@ -52,3 +52,14 @@ def save_original_questions(output_dir, questions):
         for question in questions:
             file_obj.write(question + '\n')
     return questions_path
+
+
+def save_answer_overview(path, title, questions, answers):
+    with open(path, 'w', encoding='utf-8') as file_obj:
+        file_obj.write(f'# {title}\n\n')
+        for index, question in enumerate(questions, 1):
+            answer = answers[index - 1] if index - 1 < len(answers) else '暂无答案'
+            file_obj.write(f'## 第{index}题\n\n')
+            file_obj.write(f'**题目**\n\n{question}\n\n')
+            file_obj.write(f'**答案**\n\n{answer}\n\n')
+    return path

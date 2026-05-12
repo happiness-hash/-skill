@@ -1,5 +1,8 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from exam_analysis.output_writer import save_answer_overview
 from exam_analysis.web import build_analysis_command
 
 
@@ -33,6 +36,20 @@ class WebTests(unittest.TestCase):
         self.assertIn('--api-key', command)
         self.assertIn('--use-multimodal-ocr', command)
         self.assertIn('--no-openai', command)
+
+    def test_save_answer_overview_writes_markdown(self):
+        with TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / 'answers.md'
+            save_answer_overview(
+                str(path),
+                '测试答案总览',
+                ['1. 题目A', '2. 题目B'],
+                ['答案1: A', '答案2: B'],
+            )
+            content = path.read_text(encoding='utf-8')
+            self.assertIn('# 测试答案总览', content)
+            self.assertIn('## 第1题', content)
+            self.assertIn('答案1: A', content)
 
 
 if __name__ == '__main__':

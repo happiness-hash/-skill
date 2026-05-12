@@ -2,7 +2,7 @@ import math
 import os
 
 from .ocr import extract_text_from_images
-from .output_writer import create_full_summary, create_table_of_contents, save_original_questions, save_questions
+from .output_writer import create_full_summary, create_table_of_contents, save_answer_overview, save_original_questions, save_questions
 from .question_generation import extract_original_questions, generate_original_question_answers, generate_questions_and_answers
 from .summarization import build_segment_tree
 from .text_processing import split_text_into_blocks
@@ -35,7 +35,7 @@ def run_analysis(folder_path, output_dir, num_questions, chunk_size, use_ai, use
     )
     toc_path = create_table_of_contents(output_dir, node_files)
     full_summary_path = create_full_summary(output_dir, root_summary, node_files)
-    questions, answer_files = generate_questions_and_answers(
+    questions, answers, answer_files = generate_questions_and_answers(
         root_summary,
         num_questions,
         answers_dir,
@@ -52,6 +52,18 @@ def run_analysis(folder_path, output_dir, num_questions, chunk_size, use_ai, use
         openai_config=openai_config,
     )
     questions_path = save_questions(output_dir, questions)
+    mock_answer_overview_path = save_answer_overview(
+        os.path.join(output_dir, 'mock_exam_answers.md'),
+        '模拟题答案总览',
+        questions,
+        answers,
+    )
+    original_answer_overview_path = save_answer_overview(
+        os.path.join(output_dir, 'original_question_answers.md'),
+        '原题答案总览',
+        original_questions,
+        original_answers,
+    )
 
     return {
         'text': text,
@@ -61,11 +73,14 @@ def run_analysis(folder_path, output_dir, num_questions, chunk_size, use_ai, use
         'toc_path': toc_path,
         'full_summary_path': full_summary_path,
         'questions_path': questions_path,
+        'answers': answers,
         'answer_files': answer_files,
         'original_questions': original_questions,
         'original_questions_path': original_questions_path,
         'original_answers': original_answers,
         'original_answer_files': original_answer_files,
+        'mock_answer_overview_path': mock_answer_overview_path,
+        'original_answer_overview_path': original_answer_overview_path,
         'summaries_dir': summaries_dir,
         'answers_dir': answers_dir,
         'tree_height': math.ceil(math.log2(len(blocks) + 1)),
