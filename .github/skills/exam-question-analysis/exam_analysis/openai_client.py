@@ -16,6 +16,9 @@ def get_openai_client(openai_config=None):
     base_url = openai_config.get('base_url')
     if base_url:
         client_kwargs['base_url'] = base_url
+    timeout = openai_config.get('timeout')
+    if timeout:
+        client_kwargs['timeout'] = timeout
     return OpenAI(**client_kwargs)
 
 

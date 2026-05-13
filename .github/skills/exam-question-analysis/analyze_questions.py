@@ -45,7 +45,8 @@ def main():
 
     use_multimodal_ocr = args.use_multimodal_ocr and bool(openai_config.get('api_key'))
     if args.use_multimodal_ocr and not use_multimodal_ocr:
-        print('警告：未提供 OpenAI API Key，未启用多模态OCR。')
+        print('错误：已请求多模态OCR，但未提供 OpenAI API Key。请设置 OPENAI_API_KEY 或传入 --api-key。')
+        sys.exit(1)
 
     use_ai = not args.no_openai and bool(openai_config.get('api_key'))
     if not use_ai:

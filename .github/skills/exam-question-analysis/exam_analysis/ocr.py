@@ -38,9 +38,9 @@ def multimodal_extract_text_from_image(image_path, model=DEFAULT_OPENAI_MODEL, o
         if extracted:
             return extracted
     except Exception as exc:
-        print(f'多模态OCR失败: {exc}，将回退到本地OCR。')
+        raise RuntimeError(f'多模态OCR失败: {type(exc).__name__}: {exc}') from exc
 
-    return local_extract_text_from_image(image_path)
+    raise RuntimeError('多模态OCR失败: 模型未返回可用文本')
 
 
 def iter_image_texts(folder_path, use_multimodal=False, multimodal_model=DEFAULT_OPENAI_MODEL, openai_config=None, progress=None):

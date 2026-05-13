@@ -13,6 +13,7 @@
    $env:OPENAI_BASE_URL="https://api.openai.com/v1"
    $env:OPENAI_MODEL="gpt-4.1-mini"
    $env:OPENAI_VISION_MODEL="gpt-4.1-mini"
+   $env:OPENAI_TIMEOUT="12000"
    ```
    这样可以避免把敏感信息直接写进命令参数。只有在你明确希望这样做时，再使用 CLI 显式参数或 Web 表单填写。
    安全说明：排查配置时，推荐只检查这些环境变量是否已设置，不要输出 `OPENAI_API_KEY` 的真实内容。
@@ -66,6 +67,7 @@ $env:OPENAI_API_KEY="sk-xxx"
 $env:OPENAI_BASE_URL="https://your-openai-compatible-endpoint/v1"
 $env:OPENAI_MODEL="gpt-4.1-mini"
 $env:OPENAI_VISION_MODEL="gpt-4.1-mini"
+$env:OPENAI_TIMEOUT="12000"
 python analyze_questions.py /path/to/images -d /path/to/output `
   --use-multimodal-ocr
 ```
