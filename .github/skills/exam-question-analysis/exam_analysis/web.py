@@ -2,6 +2,7 @@ import os
 import threading
 import uuid
 
+from .agent_analysis import AGENT_NAMES
 from .config import build_openai_config, get_env_status
 from .pipeline import run_analysis
 
@@ -152,6 +153,38 @@ HTML_TEMPLATE = """
             color: var(--muted);
             font-size: 14px;
         }
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .agent-card {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px;
+            background: #fbfdff;
+        }
+        .agent-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .agent-name {
+            font-weight: 700;
+        }
+        .agent-status {
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .agent-task {
+            margin-top: 8px;
+            min-height: 38px;
+            color: var(--muted);
+            font-size: 13px;
+        }
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -251,6 +284,7 @@ python app.py</pre>
                 <span id="progress-text">等待开始...</span>
                 <span id="progress-percent">0%</span>
             </div>
+            <div id="agent-grid" class="agent-grid"></div>
         </div>
 
         <div id="result-panel" class="result-panel">
@@ -266,6 +300,7 @@ python app.py</pre>
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
         const progressPercent = document.getElementById('progress-percent');
+        const agentGrid = document.getElementById('agent-grid');
         const statusBadge = document.getElementById('status-badge');
         const resultPanel = document.getElementById('result-panel');
         const resultText = document.getElementById('result-text');
@@ -292,7 +327,44 @@ python app.py</pre>
             progressPercent.textContent = `${task.progress}%`;
             progressText.textContent = task.detail || task.stage || '处理中...';
             setBadge(task.status);
+            renderAgents(task.agents || []);
             resultText.textContent = task.result || '';
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function renderAgents(agents) {
+            const fallbackAgents = [
+                { name: '水水', status: '等待中', percent: 0, current_task: '' },
+                { name: '黄黄', status: '等待中', percent: 0, current_task: '' },
+                { name: '向向', status: '等待中', percent: 0, current_task: '' },
+            ];
+            const items = agents.length ? agents : fallbackAgents;
+            agentGrid.innerHTML = items.map((agent) => {
+                const percent = Math.max(0, Math.min(100, Math.round(agent.percent || 0)));
+                const name = escapeHtml(agent.name || 'Agent');
+                const task = escapeHtml(agent.current_task || '等待任务');
+                const status = escapeHtml(agent.status || '等待中');
+                return `
+                    <div class="agent-card">
+                        <div class="agent-card-head">
+                            <span class="agent-name">${name}</span>
+                            <span class="agent-status">${status} · ${percent}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percent}%"></div>
+                        </div>
+                        <div class="agent-task">${task}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         async function pollTask(taskId) {
@@ -329,6 +401,7 @@ python app.py</pre>
             progressFill.style.width = '0%';
             progressPercent.textContent = '0%';
             progressText.textContent = '任务已提交，正在排队...';
+            renderAgents([]);
             setBadge('queued');
 
             const formData = new FormData(form);
@@ -378,6 +451,15 @@ def create_task_state():
         'stage': 'queued',
         'detail': '任务已创建，等待开始',
         'result': '',
+        'agents': [
+            {
+                'name': name,
+                'status': '等待中',
+                'percent': 0,
+                'current_task': '',
+            }
+            for name in AGENT_NAMES
+        ],
     }
 
 
@@ -399,6 +481,12 @@ def format_success_result(result, output_dir):
         f"- 叶子与节点摘要文件: {len(result['node_files'])} 个，保存于 {result['summaries_dir']}",
         f"- 目录文件: {result['toc_path']}",
         f"- 全文总结: {result['full_summary_path']}",
+        f"- 线段树节点概要: {result['tree_overview_path']}",
+        f"- 线段树可视化: {result['tree_visualization_path']}",
+        f"- 三 Agent 分组概要: {result['agent_group_summary_path']}",
+        f"- 三 Agent 分析文件: {len(result['agent_report_files'])} 个",
+        f"- 三 Agent 工作进度数据: {result['agent_progress_json_path']}",
+        f"- 三 Agent 工作进度可视化: {result['agent_progress_html_path']}",
         f"- 模拟试卷: {result['questions_path']}",
         f"- 答案文件: {len(result['answer_files'])} 个，保存于 {result['answers_dir']}",
         f"- 模拟试卷答案总览: {result['mock_answer_overview_path']}",
@@ -436,7 +524,18 @@ def run_analysis_task(task_id, payload):
         model=payload['model'] or None,
         vision_model=payload['vision_model'] or None,
     )
-    use_multimodal_ocr = payload['use_multimodal_ocr'] and bool(openai_config.get('api_key'))
+    if payload['use_multimodal_ocr'] and not openai_config.get('api_key'):
+        update_task(
+            task_id,
+            status='error',
+            progress=100,
+            stage='error',
+            detail='多模态 OCR 未配置 API Key',
+            result='已选择使用多模态 OCR，但当前 Web 进程未读取到 OPENAI_API_KEY。请在启动 python app.py 的同一个环境中配置 API Key，或在页面高级配置中填写 API Key。',
+        )
+        return
+
+    use_multimodal_ocr = payload['use_multimodal_ocr']
     use_ai = not payload['no_openai'] and bool(openai_config.get('api_key'))
 
     update_task(task_id, status='running', progress=1, stage='setup', detail='任务已启动，正在准备分析')

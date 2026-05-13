@@ -83,6 +83,11 @@ python analyze_questions.py "C:\path\to\images" -d "C:\path\to\output" --use-mul
 - `<输出目录>/summaries/`: 每个叶子节点与内部节点的单独摘要文件
 - `<输出目录>/table_of_contents.md`: 目录文件
 - `<输出目录>/full_summary.md`: 全文总结
+- `<输出目录>/segment_tree_overview.json`: 线段树节点概要数据
+- `<输出目录>/segment_tree_visualization.html`: 可展开浏览的线段树摘要可视化页面
+- `<输出目录>/agent_group_summary.md`: 水水、黄黄、向向按块分组并发分析的合并概要
+- `<输出目录>/agent_work_progress.json`: 三个 agent 的分工和进度数据
+- `<输出目录>/agent_work_progress.html`: 三个 agent 的工作内容与进度可视化页面
 - `<输出目录>/mock_exam_questions.txt`: 生成的模拟试卷
 - `<输出目录>/answers/`: 对应答案文件
 

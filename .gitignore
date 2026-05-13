@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 *.pyo
 .github/skills/exam-question-analysis/output-api-run/
+.cph/

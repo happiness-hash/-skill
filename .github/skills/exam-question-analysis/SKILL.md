@@ -104,7 +104,7 @@ description: 分析考试题、试卷截图、练习题图片或讲义题目图�
 结果整理 agent 模板：
 
 ```text
-你负责 exam-question-analysis 技能的结果整理。请读取输出目录中的 summaries、table_of_contents.md、full_summary.md、mock_exam_questions.txt、answers，提炼出最值得向用户汇报的内容，并指出哪些文件适合下一步继续加工。不要修改文件。
+你负责 exam-question-analysis 技能的结果整理。请读取输出目录中的 summaries、table_of_contents.md、full_summary.md、segment_tree_overview.json、segment_tree_visualization.html、agent_group_summary.md、agent_work_progress.html、mock_exam_questions.txt、answers，提炼出最值得向用户汇报的内容，并指出哪些文件适合下一步继续加工。不要修改文件。
 ```
 
 排障 agent 模板：
@@ -280,6 +280,10 @@ python .github\skills\exam-question-analysis\analyze_questions.py <图片文件�
 - `<输出目录>/summaries/`
 - `<输出目录>/table_of_contents.md`
 - `<输出目录>/full_summary.md`
+- `<输出目录>/segment_tree_overview.json`
+- `<输出目录>/segment_tree_visualization.html`
+- `<输出目录>/agent_group_summary.md`
+- `<输出目录>/agent_work_progress.html`
 - `<输出目录>/mock_exam_questions.txt`
 - `<输出目录>/answers/`
 
