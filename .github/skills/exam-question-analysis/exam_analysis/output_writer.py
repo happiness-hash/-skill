@@ -1,4 +1,9 @@
 import os
+import zipfile
+
+
+EXCLUDED_ARCHIVE_DIRS = {'.git', '.idea', '.venv', '__pycache__'}
+EXCLUDED_ARCHIVE_SUFFIXES = {'.pyc', '.pyo'}
 
 
 def save_node_file(path, title, raw_text, summary, child_paths):
@@ -58,9 +63,9 @@ def create_full_summary(output_dir, root_summary, node_files):
 def save_questions(output_dir, questions):
     questions_path = os.path.join(output_dir, 'mock_exam_questions.txt')
     with open(questions_path, 'w', encoding='utf-8') as file_obj:
-        file_obj.write('# 模拟考试题\n\n')
+        file_obj.write('# 模拟试卷\n\n')
         for question in questions:
-            file_obj.write(question + '\n')
+            file_obj.write(question.rstrip() + '\n\n')
     return questions_path
 
 
@@ -82,3 +87,21 @@ def save_answer_overview(path, title, questions, answers):
             file_obj.write(f'**题目**\n\n{question}\n\n')
             file_obj.write(f'**答案**\n\n{answer}\n\n')
     return path
+
+
+def create_output_archive(output_dir, archive_name='analysis_outputs.zip'):
+    archive_path = os.path.join(output_dir, archive_name)
+    with zipfile.ZipFile(archive_path, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+        for root, dirs, files in os.walk(output_dir):
+            dirs[:] = [dirname for dirname in dirs if dirname not in EXCLUDED_ARCHIVE_DIRS]
+            for filename in files:
+                path = os.path.join(root, filename)
+                if path == archive_path:
+                    continue
+                if os.path.splitext(filename)[1].lower() in EXCLUDED_ARCHIVE_SUFFIXES:
+                    continue
+                relative_path = os.path.relpath(path, output_dir)
+                if any(part in EXCLUDED_ARCHIVE_DIRS for part in relative_path.split(os.sep)):
+                    continue
+                archive.write(path, relative_path)
+    return archive_path

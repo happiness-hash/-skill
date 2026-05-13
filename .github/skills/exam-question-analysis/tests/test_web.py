@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from exam_analysis.output_writer import save_answer_overview
+from exam_analysis.output_writer import create_output_archive, save_answer_overview
 from exam_analysis.web import build_analysis_command, build_task_payload, create_task_state
 
 
@@ -73,6 +73,26 @@ class WebTests(unittest.TestCase):
             self.assertIn('# 测试答案总览', content)
             self.assertIn('## 第1题', content)
             self.assertIn('答案1: A', content)
+
+    def test_create_output_archive_excludes_ide_and_cache_files(self):
+        with TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            (output_dir / 'full_summary.md').write_text('summary', encoding='utf-8')
+            (output_dir / '.idea').mkdir()
+            (output_dir / '.idea' / 'workspace.xml').write_text('ide', encoding='utf-8')
+            (output_dir / '__pycache__').mkdir()
+            (output_dir / '__pycache__' / 'x.pyc').write_bytes(b'cache')
+
+            archive_path = create_output_archive(str(output_dir))
+
+            import zipfile
+
+            with zipfile.ZipFile(archive_path) as archive:
+                names = set(archive.namelist())
+
+            self.assertIn('full_summary.md', names)
+            self.assertNotIn('.idea/workspace.xml', names)
+            self.assertNotIn('__pycache__/x.pyc', names)
 
 
 if __name__ == '__main__':

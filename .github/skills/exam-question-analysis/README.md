@@ -25,7 +25,7 @@
 
 ```powershell
 python analyze_questions.py <文件夹路径> -d <输出目录> `
-  [-n <题目数量>] `
+  [-n <模拟试卷套数>] `
   [--chunk-size <叶子块最大词数>] `
   [--no-openai] `
   [--use-multimodal-ocr]
@@ -46,7 +46,7 @@ python analyze_questions.py <文件夹路径> -d <输出目录> `
 
 选项：
 - `--output-dir`, `-d`: 指定输出目录，必填
-- `--num-questions`, `-n`: 生成模拟考试题的数量（默认5）
+- `--num-questions`, `-n`: 生成模拟试卷的套数（默认5），每套包含多种题型
 - `--chunk-size`: 叶子节点块的最大词数（默认120）
 - `--no-openai`: 禁用OpenAI，使用本地规则生成摘要和题目
 - `--api-key`: 显式指定 API Key，未提供时回退到 `OPENAI_API_KEY`
@@ -81,7 +81,7 @@ python analyze_questions.py "C:\path\to\images" -d "C:\path\to\output" --use-mul
 - `<输出目录>/summaries/`: 每个叶子节点与内部节点的单独摘要文件
 - `<输出目录>/table_of_contents.md`: 目录文件
 - `<输出目录>/full_summary.md`: 全文总结
-- `<输出目录>/mock_exam_questions.txt`: 生成的模拟考试题
+- `<输出目录>/mock_exam_questions.txt`: 生成的模拟试卷
 - `<输出目录>/answers/`: 对应答案文件
 
 ### Web界面
@@ -98,6 +98,53 @@ python app.py
 ## 技能集成
 
 在VS Code Copilot中，使用技能描述触发。
+
+## Skill 调用指南
+
+当你希望 Copilot 或支持技能的 agent 自动调用这个 skill 时，建议在请求里明确表达以下信息：
+
+- 这是“考试题目分析”任务
+- 输入是“题目图片文件夹”或“试卷截图目录”
+- 你希望得到的输出类型：OCR、总结、目录、模拟试卷、原题答案、模拟试卷答案
+- 你希望走 CLI 还是 Web 模式
+- 是否使用 OpenAI 兼容接口
+
+推荐触发示例：
+
+```text
+请用 exam-question-analysis skill 分析这个题目图片文件夹，先做 OCR，再输出全文总结、目录、模拟试卷和原题答案。
+```
+
+```text
+请使用考试题目分析 skill，走 CLI 模式，分析这个图片目录，并把结果输出到单独目录。
+```
+
+```text
+请用 exam-question-analysis skill，走 Web 模式，我想在页面里填写路径并查看分析结果。
+```
+
+```text
+请用 exam-question-analysis skill，使用 OpenAI 兼容接口做多模态 OCR，并生成模拟试卷答案总览和原题答案总览。
+```
+
+调用时的推荐说法：
+
+- “分析这个题目图片文件夹”
+- “把这些试卷截图做 OCR 并整理”
+- “生成总结、目录、模拟试卷和答案”
+- “使用 CLI 模式”
+- “使用 Web 模式”
+- “使用多模态 OCR”
+
+为了让 skill 更稳定地命中，尽量避免只说“帮我看看这个”，而不说明这是题目图片分析任务。
+
+skill 被触发后，通常会按这个顺序推进：
+
+1. 先确认运行模式：CLI 或 Web
+2. 再确认输入图片目录和输出目录
+3. 再判断走本地 OCR 还是多模态 OCR
+4. 再确认是否需要 OpenAI 配置
+5. 最后执行分析并汇报结果路径
 
 ## 多 Agent 协作建议
 

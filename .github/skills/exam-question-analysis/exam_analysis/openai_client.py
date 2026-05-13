@@ -36,10 +36,10 @@ def extract_response_text(response):
     return '\n'.join(part.strip() for part in outputs if part and part.strip()).strip()
 
 
-def request_text_completion(prompt, model=DEFAULT_OPENAI_MODEL, max_output_tokens=900, openai_config=None):
+def request_text_completion_with_error(prompt, model=DEFAULT_OPENAI_MODEL, max_output_tokens=900, openai_config=None):
     client = get_openai_client(openai_config)
     if not client:
-        return None
+        return None, 'OpenAI API key 未配置'
 
     try:
         response = client.responses.create(
@@ -47,11 +47,23 @@ def request_text_completion(prompt, model=DEFAULT_OPENAI_MODEL, max_output_token
             input=prompt,
             max_output_tokens=max_output_tokens,
         )
-    except Exception:
-        return None
+    except Exception as exc:
+        return None, f'{type(exc).__name__}: {exc}'
 
     text = extract_response_text(response)
-    return text or None
+    if not text:
+        return None, 'OpenAI 返回为空'
+    return text, None
+
+
+def request_text_completion(prompt, model=DEFAULT_OPENAI_MODEL, max_output_tokens=900, openai_config=None):
+    text, _ = request_text_completion_with_error(
+        prompt,
+        model=model,
+        max_output_tokens=max_output_tokens,
+        openai_config=openai_config,
+    )
+    return text
 
 
 def build_image_data_url(image_path):

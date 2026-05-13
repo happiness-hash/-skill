@@ -2,7 +2,7 @@ import math
 import os
 
 from .ocr import iter_image_texts
-from .output_writer import create_full_summary, create_table_of_contents, save_answer_overview, save_block_file, save_original_questions, save_page_text, save_questions
+from .output_writer import create_full_summary, create_output_archive, create_table_of_contents, save_answer_overview, save_block_file, save_original_questions, save_page_text, save_questions
 from .progress import ProgressTracker
 from .question_generation import extract_original_questions, generate_original_question_answers, generate_questions_and_answers
 from .summarization import build_segment_tree
@@ -89,7 +89,7 @@ def run_analysis(folder_path, output_dir, num_questions, chunk_size, use_ai, use
         openai_config=openai_config,
         progress=progress.child(75, 87),
     )
-    progress.emit(88, 'original_questions', '模拟题完成，正在提取原题')
+    progress.emit(88, 'original_questions', '模拟试卷完成，正在提取原题')
     original_questions = extract_original_questions(text)
     original_questions_path = save_original_questions(output_dir, original_questions)
     original_answers, original_answer_files = generate_original_question_answers(
@@ -104,7 +104,7 @@ def run_analysis(folder_path, output_dir, num_questions, chunk_size, use_ai, use
     questions_path = save_questions(output_dir, questions)
     mock_answer_overview_path = save_answer_overview(
         os.path.join(output_dir, 'mock_exam_answers.md'),
-        '模拟题答案总览',
+        '模拟试卷答案总览',
         questions,
         answers,
     )
@@ -114,6 +114,7 @@ def run_analysis(folder_path, output_dir, num_questions, chunk_size, use_ai, use
         original_questions,
         original_answers,
     )
+    archive_path = create_output_archive(output_dir)
     result = {
         'text': text,
         'blocks': blocks,
@@ -130,6 +131,7 @@ def run_analysis(folder_path, output_dir, num_questions, chunk_size, use_ai, use
         'original_answer_files': original_answer_files,
         'mock_answer_overview_path': mock_answer_overview_path,
         'original_answer_overview_path': original_answer_overview_path,
+        'archive_path': archive_path,
         'summaries_dir': summaries_dir,
         'answers_dir': answers_dir,
         'block_files': block_files,

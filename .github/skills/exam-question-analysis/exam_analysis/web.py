@@ -399,12 +399,13 @@ def format_success_result(result, output_dir):
         f"- 叶子与节点摘要文件: {len(result['node_files'])} 个，保存于 {result['summaries_dir']}",
         f"- 目录文件: {result['toc_path']}",
         f"- 全文总结: {result['full_summary_path']}",
-        f"- 模拟试题: {result['questions_path']}",
+        f"- 模拟试卷: {result['questions_path']}",
         f"- 答案文件: {len(result['answer_files'])} 个，保存于 {result['answers_dir']}",
-        f"- 模拟题答案总览: {result['mock_answer_overview_path']}",
+        f"- 模拟试卷答案总览: {result['mock_answer_overview_path']}",
         f"- 原题整理: {result['original_questions_path']}",
         f"- 原题答案文件: {len(result['original_answer_files'])} 个，保存于 {os.path.join(result['answers_dir'], 'original_questions')}",
         f"- 原题答案总览: {result['original_answer_overview_path']}",
+        f"- 输出压缩包: {result['archive_path']}",
     ]
     return '\n'.join(lines)
 

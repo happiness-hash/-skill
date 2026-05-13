@@ -1,0 +1,6 @@
+test/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.github/skills/exam-question-analysis/output-api-run/

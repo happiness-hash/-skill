@@ -13,10 +13,10 @@ def render_progress_bar(progress, width=28):
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(description='对上传的试卷图片进行OCR分块分析，生成节点文件、全文总结、模拟题和答案')
+    parser = argparse.ArgumentParser(description='对上传的试卷图片进行OCR分块分析，生成节点文件、全文总结、模拟试卷和答案')
     parser.add_argument('folder', help='包含试卷图片的文件夹路径')
     parser.add_argument('--output-dir', '-d', required=True, help='输出结果目录，必须显式指定')
-    parser.add_argument('--num-questions', '-n', type=int, default=5, help='生成模拟考试题的数量')
+    parser.add_argument('--num-questions', '-n', type=int, default=5, help='生成模拟试卷的套数')
     parser.add_argument('--no-openai', action='store_true', help='不使用OpenAI API，仅使用本地规则生成摘要和题目')
     parser.add_argument('--use-multimodal-ocr', action='store_true', help='使用OpenAI多模态模型进行OCR提取')
     parser.add_argument('--api-key', help='可选，显式指定 OpenAI API Key；未提供时回退到 OPENAI_API_KEY')
@@ -91,9 +91,9 @@ def main():
     print(f"- 叶子与节点摘要文件: {len(result['node_files'])} 个，保存于 {result['summaries_dir']}")
     print(f"- 目录文件: {result['toc_path']}")
     print(f"- 全文总结: {result['full_summary_path']}")
-    print(f"- 模拟试题: {result['questions_path']}")
+    print(f"- 模拟试卷: {result['questions_path']}")
     print(f"- 答案文件: {len(result['answer_files'])} 个，保存于 {result['answers_dir']}")
-    print(f"- 模拟题答案总览: {result['mock_answer_overview_path']}")
+    print(f"- 模拟试卷答案总览: {result['mock_answer_overview_path']}")
     print(f"- 原题整理: {result['original_questions_path']}")
     print(f"- 原题答案文件: {len(result['original_answer_files'])} 个，保存于 {os.path.join(result['answers_dir'], 'original_questions')}")
     print(f"- 原题答案总览: {result['original_answer_overview_path']}")
